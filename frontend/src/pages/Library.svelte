@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import { pb } from '../lib/pb';
   import Header from '../lib/Header.svelte';
+  import GLightbox from 'glightbox';
+  import 'glightbox/dist/css/glightbox.min.css';
 
   let photos = [];
   let loading = true;
@@ -14,6 +16,11 @@
         filter: `owner = "${pb.authStore.model.id}"`,
       });
       photos = records.items;
+
+      // Initialize lightbox after photos loaded
+      setTimeout(() => {
+        GLightbox({ touchNavigation: true, keyboardNavigation: true });
+      }, 100);
     } catch (err) {
       error = err.message;
     } finally {
@@ -34,13 +41,13 @@
   {:else}
     <div class="photo-grid">
       {#each photos as photo}
-        <div class="photo-card">
+        <a href="/thumbs/view/{photo.path}" class="glightbox photo-card">
           <img
-            src="/library/{photo.path}"
+            src="/thumbs/small/{photo.path}"
             alt={photo.path}
             loading="lazy"
           />
-        </div>
+        </a>
       {/each}
     </div>
   {/if}

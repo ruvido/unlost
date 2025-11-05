@@ -14,7 +14,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 )
 
-func scanLibrary(app *pocketbase.PocketBase, libraryPath string) error {
+func scanLibrary(app *pocketbase.PocketBase, libraryPath, thumbnailPath string) error {
 	log.Println("Scanning library...")
 
 	mediaCollection, err := app.FindCollectionByNameOrId("media")
@@ -89,6 +89,14 @@ func scanLibrary(app *pocketbase.PocketBase, libraryPath string) error {
 			record, _ := app.FindRecordById(mediaCollection.Name, existingId)
 			if record != nil {
 				record.Set("missing", false)
+
+				// Generate thumbnails if not already generated
+				if !record.GetBool("thumbs_generated") {
+					if err := generateThumbnails(libraryPath, thumbnailPath, relPath); err == nil {
+						record.Set("thumbs_generated", true)
+					}
+				}
+
 				app.Save(record)
 			}
 			return nil
@@ -117,6 +125,12 @@ func scanLibrary(app *pocketbase.PocketBase, libraryPath string) error {
 
 		if err := app.Save(record); err != nil {
 			return nil
+		}
+
+		// Generate thumbnails for new record
+		if err := generateThumbnails(libraryPath, thumbnailPath, relPath); err == nil {
+			record.Set("thumbs_generated", true)
+			app.Save(record)
 		}
 
 		added++

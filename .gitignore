@@ -2,6 +2,7 @@
 pb_data/
 pocketbase
 library/
+thumbnails/
 test_assets/
 .env
 

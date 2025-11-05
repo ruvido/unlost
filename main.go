@@ -25,17 +25,25 @@ func main() {
 		log.Fatal("LIBRARY_PATH not set in .env")
 	}
 
+	thumbnailPath := os.Getenv("THUMBNAIL_PATH")
+	if thumbnailPath == "" {
+		log.Fatal("THUMBNAIL_PATH not set in .env")
+	}
+
 	app := pocketbase.New()
 
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		// Background library scan
 		go func() {
 			time.Sleep(2 * time.Second)
-			scanLibrary(app, libraryPath)
+			scanLibrary(app, libraryPath, thumbnailPath)
 		}()
 
 		// Serve library files
 		se.Router.GET("/library/{path...}", apis.Static(os.DirFS(libraryPath), false))
+
+		// Serve thumbnails (small and view)
+		se.Router.GET("/thumbs/{path...}", apis.Static(os.DirFS(thumbnailPath), false))
 
 		// Serve frontend
 		se.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))
